@@ -1,42 +1,24 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const passportLocalMongoose = require('passport-local-mongoose');
+const passport = require('passport');
 const { Schema } = mongoose;
-require("dotenv").config();
-
-const saltRounds = 10;
 
 const UserSchema = new Schema({
   email: {
     type: String,
-    required: true,
   },
   password: {
     type: String,
-    required: true,
   },
 });
 
-UserSchema.pre("save", async function (next) {
-  try {
-    const user = this;
-    if (!user.isModified("password")) next();
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedPassword = await bcrypt.hash(this.password, salt);
-    this.password = hashedPassword;
-    next();
-  } catch (error) {
-    return next(error);
-  }
-});
+UserSchema.plugin(passportLocalMongoose);
 
-UserSchema.methods.matchPassword = async function (password) {
-  try {
-    return await bcrypt.compare(password, this.password);
-  } catch (error) {
-    throw new Error(error);
-  }
-};
+const UserModel = new mongoose.model("user", UserSchema);
 
-const UserModel = mongoose.model("user", UserSchema);
+passport.use(UserModel.createStrategy());
+
+passport.serializeUser(UserModel.serializeUser());
+passport.deserializeUser(UserModel.deserializeUser());
 
 module.exports = UserModel;
