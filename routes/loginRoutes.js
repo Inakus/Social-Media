@@ -52,9 +52,17 @@ router.post("/login", async (req, res) => {
 
     return res
       .status(200)
-      .json({ msg: "You have logged in successfully" }, userSession);
+      .json(userSession);
   } else {
     return res.status(400).json({ msg: "Invalid credential" });
+  }
+});
+
+router.get("/isAuth", async (req, res) => {
+  if (req.session.user) {
+    return res.json(req.session.user);
+  } else {
+    return res.status(401).json("unauthorize");
   }
 });
 
